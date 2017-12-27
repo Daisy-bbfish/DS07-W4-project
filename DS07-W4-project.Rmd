@@ -1,0 +1,113 @@
+---
+title: "Regression Models Course Project- Car MPG Analysis"
+author: "Daisy Wu"
+date: "2017年12月25日"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Summary
+#### Motor Trend is a automobile industry Magazine. We are interested the relationship between variables that affect miles per gallon MPG.
+1. Are automatic or manual transmission better for MPG?
+2. What are the MPG differences between automatic/manual transmissions?
+
+Using a data set provided by Motor Trend Magazine do linear regression and hypothesis
+testing, to see if there is a significant MPG differences between automatic and manual transmission.
+
+To quantify the MPG difference between automatic and manual transmission cars, a linear regression model was used to take into account the weight, transmission type and the acceleration. Based on these findings manual transmissions have better fuel economy of 2.94 MPG more than automatic transmissions.
+
+## Load  Libraries
+```{r}
+library(ggplot2)
+library(dplyr)
+```
+
+## Read the Data
+```{r}
+data(mtcars)
+str(mtcars)
+```
+
+## Process the Data
+#### convert "am" to a factor variable, "AT"= Automatic Transmission and "MT"= Manual Ttansmission.
+```{r}
+mtcars$am<-as.factor(mtcars$am)
+levels(mtcars$am)<-c("AT", "MT")
+```
+
+## Exploratory Data Analysis
+### Get the Mean of Automatic and Manual Transmissions:
+```{r}
+aggregate(mpg~am, data=mtcars, mean)
+```
+
+#### The mean MPG for manual transmissions is 7.245 which higher than automatic transmission cars. Is this significant?
+
+## Validate Significance:
+```{r}
+aData <- mtcars[mtcars$am == "AT",]
+mData <- mtcars[mtcars$am == "MT",]
+t.test(aData$mpg, mData$mpg)
+```
+
+#### The p-value of the t-tst is 0.001374, with 95% confidence interval. There is a significant difference between the mean MPG for automatic verses manual transmissions.
+
+## Histogram of the mpg for Automatic and Manual Trasmissions.
+```{r}
+ggplot(data = mtcars, aes(mpg)) + geom_histogram() + facet_grid(.~am) + labs(x = "Miles per Gallon", y = "Frequency", title = "MPG Histogram for automatic verses manual transmissions")
+```
+
+## Boxplot mpg for Automatic and Manual Trasmissions
+```{r}
+ggplot(data = mtcars, aes(am,mpg)) + geom_boxplot() + labs(x= "Transmission", y = "MPG", title = "MPG: Automatic and Manual Trasmissions")
+```
+
+#### Correlations:
+
+```{r}
+corr <- select(mtcars, mpg,cyl,disp,wt,qsec, am)
+pairs(corr, col = 4)
+```
+
+## Linear Model 1
+### Illastration mpg for automatic transmisions
+```{r}
+f1 <-lm(mpg~am, data = mtcars)
+summary(f1)
+```
+
+#### From this linear regression model of mpg against automatic, manual transmission have 7.24 MPG more than automatic transmission. The R^2 value of this model is 0.3598, meaning that it only explains 35.98% of the
+
+## Linear Model 2
+### Using step function.
+```{r}
+f2 = step(lm(data = mtcars, mpg ~ .),trace=0,steps=10000)
+summary(f2)
+```
+
+#### This model uses an algorithm to pick the variables with the most affect on mpg. From the model, the weight, acceleration as well as the transmission affect the mpg of the car the most. Based on a multivariate regression model, a manual transmission cars have better fuel efficiency of 2.94 MPG higher than automatic transmission cars. The adjusted R^2 of the model is 0.834, meaning that 83% of the variance in mpg is do to the model.
+
+## ANOVA 2 Models
+```{r}
+fstep<-lm(mpg~ am + wt + qsec, data = mtcars)
+anova(f1, fstep)
+```
+
+#### The p-value indicates that we should reject the null hypothesis that the means from both models are the same. That is, the weight and acceleration of the car have a significant impact on it’s MPG.
+
+## Conclusion
+#### In conclusion, holding the weight and acceleration of the cars as constant, manual transmission cars offer 2.94 MPG better fuel efficiency.
+
+## Model Residuals
+```{r}
+par(mfrow = c(2,2))
+plot(f2, col = 4)
+```
+
+### By examining the plot of residuals, we can see that there are a few outliers, but nothing significant that would skew the data.
+
